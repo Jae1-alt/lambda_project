@@ -1,9 +1,3 @@
-# output "api_urls" {
-#   value = {
-#     for k, v in var.function_code_config : k => "${aws_apigatewayv2_api.example.api_endpoint}/prod/${k}?name="
-#   }
-# }
-
 output "rest_api_urls" {
   description = "Specific API Gateway stage URL's; associated with specific Lambda function."
   value = {
