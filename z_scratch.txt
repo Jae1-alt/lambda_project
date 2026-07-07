@@ -1,0 +1,44 @@
+    aws cognito-idp initiate-auth \
+      --auth-flow USER_PASSWORD_AUTH \
+      --client-id <CLIENT_ID> \
+      --auth-parameters USERNAME=student1,PASSWORD=YourPassword
+
+aws cognito-idp initiate-auth \
+    --auth-flow USER_PASSWORD_AUTH \
+    --client-id 6s9nkj5bol89ccb7282na8ff0p \
+    --auth-parameters USERNAME=jae-alpha,PASSWORD=@lphA4352
+
+aws cognito-idp initiate-auth \
+    --auth-flow USER_PASSWORD_AUTH \
+    --client-id 6olp2vdmtlj9780hbudp98fdeh \
+    --auth-parameters USERNAME=jae-alpha,PASSWORD=@lphA4352
+
+6olp2vdmtlj9780hbudp98fdeh
+Now for MFA, required:
+
+aws cognito-idp respond-to-auth-challenge \
+    --client-id 6s9nkj5bol89ccb7282na8ff0p \
+    --challenge-name SMS_MFA \
+    --challenge-responses USERNAME=jae-alpha,SMS_MFA_CODE=144049 \
+    --session "AYABePSrVQq3Edot4uPTuu8tkygAHQABAAdTZXJ2aWNlABBDb2duaXRvVXNlclBvb2xzAAEAB2F3cy1rbXMAS2Fybjphd3M6a21zOnVzLWVhc3QtMTo3NDU2MjM0Njc1NTU6a2V5L2IxNTVhZmNhLWJmMjktNGVlZC1hZmQ4LWE5ZTA5MzY1M2RiZQC4AQIBAHgnFuRNRXNkpdS82RaDIJ87clYWGh03ZxVHIWF9KwyFfwGHQv09Ds-wWWRBrrs8whYVAAAAfjB8BgkqhkiG9w0BBwagbzBtAgEAMGgGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMWH34Cv6pJbEjMWyPAgEQgDt4YPi5-m66vD8BBv8Y83FdlHfhjdVSj5yiSorwi7-eTYFzye4kNXwKCt6MZF3yZSuWLibY34ZYydCGLwIAAAAADAAAEAAAAAAAAAAAAAAAAADnKJZYr8fD-hb6UxLWYvB6_____wAAAAEAAAAAAAAAAAAAAAEAAAEDMEohnKz7ZngL5wkDNQ0Ou0RycH4pmBUaHc3rou9ywyEPwAS536DVm4pHaGm7rYrJbET409t6dePqp6seI3x0wzUh9evt7VWGwYGPQqvMUYq4d1qUin5be1_lyrG6IOxzkUBzYcmcw6ZkixpyGyhLxBKbdirfKQ9lzhrYErA68Er5o7-Qmh7cjW34hQRhvGSOOztOuqBBXUrXUp_9_KW133Gj746uX0AY-CPE9FeWs0b-K_4_jVd05isLGUl5mbK6ZNPnlfMjDq0NP9V94RiPpaa8sLRvRYb-vjPqPMsRSJWothZrHINkTTsEkyEkjNMi5EYpUDcNlarpbKXosj7HmjlS8y0h7SQFzmCuVPR0M_CGl80"
+
+aws cognito-idp respond-to-auth-challenge \
+    --client-id <CLIENT_ID> \
+    --challenge-name SOFTWARE_TOKEN_MFA \
+    --challenge-responses USERNAME=<username>,SOFTWARE_TOKEN_MFA_CODE=<software mfa code> \
+    --session <session token>
+
+aws cognito-idp respond-to-auth-challenge \
+    --client-id 6s9nkj5bol89ccb7282na8ff0p \
+    --challenge-name SOFTWARE_TOKEN_MFA \
+    --challenge-responses USERNAME=jae-alpha,SOFTWARE_TOKEN_MFA_CODE=326560 \
+    --session AYABeOBiiU0HEldU9TnHaPv-juMAHQABAAdTZXJ2aWNlABBDb2duaXRvVXNlclBvb2xzAAEAB2F3cy1rbXMAS2Fybjphd3M6a21zOnVzLWVhc3QtMTo3NDU2MjM0Njc1NTU6a2V5L2IxNTVhZmNhLWJmMjktNGVlZC1hZmQ4LWE5ZTA5MzY1M2RiZQC4AQIBAHgnFuRNRXNkpdS82RaDIJ87clYWGh03ZxVHIWF9KwyFfwFVLuRIr9yrLwbNT0Fld29bAAAAfjB8BgkqhkiG9w0BBwagbzBtAgEAMGgGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMcxeGAoKURwPOckkvAgEQgDuR6yJk9VTSPIBhh4YHC465rdULvBysnjo6me4Ayasg0qAUHI0kUPm8qrtofdfSFnalsQKu_0BurcUSrwIAAAAADAAAEAAAAAAAAAAAAAAAAAAPVAOZiGCnbXXOgg_FmwSd_____wAAAAEAAAAAAAAAAAAAAAEAAAED__NU9AshTJikyXSBkH1UjXJdjPRCYNP0bLcde_ziAnyunzinRaQ1IYkVsZDrZeSL3TJawPOICMOfUdCKKTKf3Au0tpBl6Yrrxx-lHiiawYFmP1VCSJ3vny-4cJz14lkn1e8umslMIxLsmG4tJnuQDwo6LtCM4hed3ks2JgyjsM2LYpA4V8veG_E2H8coSAENRS4HZIq4mELVG0mzNWsHdkd5Qf-izrE4bqa620NgmNyRQ-EzcmUZOXdVeJ3qPGF44tQ6VoVKLacMrl0Tuz4xXo-zgvx9Li38kHi_YGatuS5vKhGXRZptGvhGYGCKRNiXLccJJz0E026BvfUScX1RbKcZEHuJn_fzWoCuSS6ilTTDbOk
+
+    aws cognito-idp respond-to-auth-challenge \
+      --client-id <CLIENT_ID> \
+      --challenge-name SOFTWARE_TOKEN_MFA \
+      --challenge-responses USERNAME=student1,SOFTWARE_TOKEN_MFA=123456 \
+      --session <SESSION>
+
+curl https://01tnx5d42i.execute-api.us-east-1.amazonaws.com/prod/python?name= \
+    -H "Authorization: eyJraWQiOiIyWVpyMVRrUmtnWlNPMWxFOENkdUtxcGdnUk4yVGdwdVpJd1N2b3kxREFJPSIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiI5NGE4MDQ4OC1hMDExLTcwNjktMDVkMC01YjkyODY2MmRhNTkiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiaXNzIjoiaHR0cHM6Ly9jb2duaXRvLWlkcC51cy1lYXN0LTEuYW1hem9uYXdzLmNvbS91cy1lYXN0LTFfN1pjZWpGbkNDIiwiY29nbml0bzp1c2VybmFtZSI6ImphZS1hbHBoYSIsIm9yaWdpbl9qdGkiOiI3MmI0ZTdiZS0xMTNmLTRmNzYtOWZmZi1mN2NjMWRiNDNmZGIiLCJhdWQiOiI2czlua2o1Ym9sODljY2I3MjgybmE4ZmYwcCIsImV2ZW50X2lkIjoiNjkwMTVmMDMtZDNjMi00MDhhLTliYzktZDMzY2U2M2I1MjNlIiwidG9rZW5fdXNlIjoiaWQiLCJhdXRoX3RpbWUiOjE3ODE0ODE2NTYsImV4cCI6MTc4MTQ4NTI1NiwiaWF0IjoxNzgxNDgxNjU2LCJqdGkiOiIyYjdmNDFhNy03OTRhLTQzOWEtOGY0Yi0xZDUzNzY4NDYxZGMiLCJlbWFpbCI6ImFsY2lkZS5qYUBnbWFpbC5jb20ifQ.EtBEKwYCxfqO9cw9wxO3ZlQgoKWYn7N99cCIC53eiJjfc_XOcdFz6rfTkQ8o3ufU_qz0iGjR8NSu6EZef7laGruj3gVS_5joVswuWw03SiU2hlb-qD-E_Y3UP5reQZAmMbduYqxwN8NjWOyA3fKBuYXSfDo_TCRgSEjtQkoU05yEgkgmY4ony-T-Ou9kD80IcljjuG7TyMv_QmJd933HidgxXYQ0XCg1dzKNpLfDLdAQu9EjAWneSkfbaUy_R8Tdbh5K6hbXty-FL70Wxd3aQZKwc5EAcOUVIONqalUrtvBy1wNtP2T1_wveeP4QA3nwgBvmtFPaFtSQTg6DlPYYvg" 

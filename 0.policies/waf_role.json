@@ -1,0 +1,26 @@
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Action": [
+            "logs:FilterLogEvents"
+          ],
+          "Resource": "*"
+        },
+        {
+          "Effect": "Allow",
+          "Action": [
+            "bedrock:InvokeModel"
+          ],
+          "Resource": "*"
+        },
+       {
+         "Effect": "Allow",
+         "Action": [
+           "dynamodb:PutItem"
+         ],
+         "Resource": "arn:aws:dynamodb:${region}:${account_id}:table/waf-events"
+        }
+      ]
+    }
