@@ -1,5 +1,5 @@
 
-# AWS Serverless RBAC & Authentication Platform
+# 🛡️ AWS Serverless RBAC & Authentication Platform
 
 > A living engineering portfolio and Infrastructure-as-Code project documenting the design, implementation, and debugging of a secure, multi-language serverless architecture on AWS.
 
@@ -7,7 +7,7 @@ This project implements a production-ready **Role-Based Access Control (RBAC)** 
 
 ---
 
-## System Architecture & Core Principles
+## 🏛️ System Architecture & Core Principles
 
 ### The "Bouncer & Bartender" Paradigm
 To conceptualize the division of security responsibilities across the AWS infrastructure, this architecture utilizes a strict separation between Authentication (AuthN) and Authorization (AuthZ):
@@ -26,7 +26,7 @@ To conceptualize the division of security responsibilities across the AWS infras
 
 ---
 
-## Project Structure
+## 📂 Project Structure
 
 ```text
 ├── 0_Images
@@ -97,26 +97,26 @@ To conceptualize the division of security responsibilities across the AWS infras
 
 ---
 
-## Implementation Phases
+## 🚀 Implementation Phases
 
-### Phase 1: Core API & Edge Security [Complete]
+### ✅ Phase 1: Core API & Edge Security [Complete]
 *   API Gateway routing for multi-language endpoints (`/python`, `/node`).
 *   AWS WAF WebACL deployment for edge-layer rate limiting and common exploit protection.
 *   Terraform IaC modularization (`main-01` through `main-04`).
 
-### Phase 2: Identity & Authentication (Cognito) [Complete]
+### ✅ Phase 2: Identity & Authentication (Cognito) [Complete]
 *   Cognito User Pool creation with MFA challenges (SMS & Software Token).
 *   JWT token generation, validation, and claim extraction.
 *   Discovery of OAuth2 token boundaries: **ID Tokens** (contain `email`, `cognito:username`) vs **Access Tokens** (contain `username`, `scope`, `cognito:groups`).
 *   API Gateway Cognito Authorizer mapping to inject claims into Lambda events.
 
-### Phase 3: Authorization & RBAC Compute Layer [Complete]
+### ✅ Phase 3: Authorization & RBAC Compute Layer [Complete]
 *   Refactored Python & Node.js Lambda functions with **Explicit Allow** logic.
 *   Environment variable serialization: `jsonencode()` in Terraform mapped to `json.loads()` / `JSON.parse()` in compute.
 *   **Terraform "Flattening Engine"**: Nested `for` expressions combined with `flatten()` to map many-to-many user-group relationships.
 *   Debugged Terraform literal type unification, Lambda handler dot-notation crashes, and missing standard library imports.
 
-### Phase 4: Telemetry & Token Lifecycle [In Progress]
+### 🔄 Phase 4: Telemetry & Token Lifecycle [In Progress]
 *   DynamoDB `token-tracking` table for single-use token telemetry.
 *   `get_token.py` refactored as an Auth Utility and Telemetry Producer.
 *   EventBridge Scheduler (`rate(5 minutes)`) triggering the `unused-token-detector` Lambda.
@@ -125,7 +125,7 @@ To conceptualize the division of security responsibilities across the AWS infras
 
 ---
 
-## Engineering Lessons & Debugged Edge Cases
+## 💡 Engineering Lessons & Debugged Edge Cases
 
 | Challenge | Root Cause | Resolution |
 | :--- | :--- | :--- |
@@ -137,7 +137,7 @@ To conceptualize the division of security responsibilities across the AWS infras
 
 ---
 
-## How to Deploy & Test
+## ⚙️ How to Deploy & Test
 
 **1. Provision Infrastructure:**
 ```bash
@@ -160,7 +160,7 @@ curl -X GET "https://<api-id>.execute-api.<region>.amazonaws.com/prod/python" \
 
 ---
 
-## Roadmap & Continuous Evolution
+## 🗺️ Roadmap & Continuous Evolution
 
 - [ ] Implement DynamoDB `ConditionalCheckFailedException` handling for race-condition protection.
 - [ ] Enable WAF logging with CloudWatch Resource Policy and header redaction.
@@ -172,4 +172,4 @@ curl -X GET "https://<api-id>.execute-api.<region>.amazonaws.com/prod/python" \
 
 ---
 **Built with:** Terraform | AWS Lambda | API Gateway | Cognito | DynamoDB | EventBridge | WAF | Python | Node.js  
-**Status:** Active Development |
+**Status:** 🟢 Active Development |
