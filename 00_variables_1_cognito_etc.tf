@@ -7,8 +7,6 @@ variable "lambda_cognito_users" {
     groups    = any
     phone     = optional(string)
   }))
-
-
   default = {
     user_1 = {
       user_name = "dough-john"
