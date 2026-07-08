@@ -22,15 +22,12 @@ resource "aws_wafv2_web_acl" "api_waf" {
         vendor_name = "AWS"
       }
     }
-
-    # add somemore rules
     # XSS = "AWSManagedRulesCommonRuleSet" (already added)
     # SQL = "AWSManagedRulesSQLiRuleSet"
-    # DDOS = rate limiter (already added)
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = "commonRules"
+      metric_name                = "XSScommonRules"
       sampled_requests_enabled   = true
     }
   }

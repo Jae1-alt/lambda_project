@@ -4,17 +4,17 @@
 
 # role for lambda function
 resource "aws_iam_role" "lambda_execution_role" {
-  name               = "j-lambda-execution-role"
+  name               = "lambda-soar-project-role"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 
   tags = {
-    Name        = "j-lambda-execution-role"
+    Name        = "j-lambda-role"
     Environment = "Test"
     Managed_by  = "Terraform"
   }
 }
 
-# basically will be the inline json polciy code thet describes who can assume the role, /
+# basically will be the inline json polciy code that describes who can assume the role.
 # note that this is a data lookup and not a resource because it isn't created in AWS /
 # this data source just functions to render the json code to be used by the aws_iam_role resource.
 data "aws_iam_policy_document" "assume_role" {

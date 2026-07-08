@@ -7,11 +7,25 @@ variable "lambda_cognito_users" {
     groups    = any
     phone     = optional(string)
   }))
+
+
+  default = {
+    user_1 = {
+      user_name = "dough-john"
+      email     = "john_doigh.ja@gmail.com"
+      password  = "P@assword1234"
+      groups    = ["admin"]
+    }
+  }
 }
 
 variable "lambda_cognito_group" {
   description = "A list of the cognito groups user can be in."
   type        = list(string)
+
+  default = [
+    "admin"
+  ]
 }
 
 locals {
