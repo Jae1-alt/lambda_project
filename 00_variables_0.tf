@@ -113,7 +113,8 @@ variable "function_code_config" {
         ALLOWED_GROUPS    = ["admin"]
       }
       # for this default in the varibale, both blocks must have the same value arguments and types
-      # using .tfvars should solve this
+      # using .tfvars solve this.
+      # update, .tfvars doesn't solve this.
 
       # for API permissions
       statement_id = "AllowAPIGatewayInvokeNode"
