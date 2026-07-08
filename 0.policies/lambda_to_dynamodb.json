@@ -12,7 +12,7 @@
         "dynamodb:Scan",
         "dynamodb:Query"
       ],
-      "Resource": "arn:aws:lambda:${region}:${account_id}:*"
+      "Resource": "arn:aws:dynamodb:${region}:${account_id}:*"
     }
   ]
 }

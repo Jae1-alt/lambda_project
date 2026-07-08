@@ -4,7 +4,7 @@
         {
             "Effect": "Allow",
             "Action": ["bedrock:InvokeModel"],
-            "Resource": "arn:aws:lambda:${region}:${account_id}:*"
+            "Resource": "arn:aws:bedrok:${region}:${account_id}:*"
         }
     ]
 }
