@@ -69,7 +69,8 @@ resource "aws_cognito_user_pool_client" "lambda_api_cognito_client" {
   allowed_oauth_flows                  = ["code"]
   allowed_oauth_scopes                 = ["openid", "email", "profile"]
   allowed_oauth_flows_user_pool_client = true
-  callback_urls                        = ["http://localhost"]
+  callback_urls                        = ["http://localhost/callback"]
+  logout_urls                          = ["https://localhost/logout"]
   supported_identity_providers         = ["COGNITO"]
 
   # token lifetimes and settings
