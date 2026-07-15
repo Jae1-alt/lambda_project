@@ -5,7 +5,9 @@
       "Sid": "Statement1",
       "Effect": "Allow",
       "Action": [
-        "dynamodb:PutItem"
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:GetItem"
       ],
       "Resource": "${dynamodb_table_arn}"
     }

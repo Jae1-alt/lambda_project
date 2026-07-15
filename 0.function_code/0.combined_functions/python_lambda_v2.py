@@ -92,7 +92,8 @@ def lambda_handler(event, context):
     response = {
         "message": f"Hello {name} from Python!",
         "timestamp": datetime.utcnow().isoformat(),
-        "authenticated_groups": groups
+        "authenticated_groups": groups,
+        "token_telemetry" : token_id
     }
 
     print("Response:", json.dumps(response))

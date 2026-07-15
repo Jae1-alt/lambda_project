@@ -21,8 +21,8 @@ variable "custom_policy" {
       description = "Policy allowing lambda to invoke bedrock."
     }
     lambda-to-dynamodb = {
-      file_path   = "0.policies/lambda_to_dynamodb_put.json"
-      description = "Policy allowing lambda to put objects in DynamoDB."
+      file_path   = "0.policies/lambda_to_dynamodb.json"
+      description = "Policy allowing lambda access to manipulate objects in DynamoDB."
     }
   }
 }
