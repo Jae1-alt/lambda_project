@@ -1,4 +1,7 @@
-import uuid
+### This python code is meant to be added to the get token python code
+
+``` python
+import uui
 from datetime import datetime
 
 dynamodb = boto3.resource("dynamodb")
@@ -14,3 +17,4 @@ table.put_item(
         "used": False
     }
 )
+```
