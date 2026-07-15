@@ -15,7 +15,7 @@ data "archive_file" "app_lambda_code" {
 }
 
 # -------------------------------------------------------------------
-# Application Lambda Function + 
+# Application (AuthZ) Lambda Function + 
 # -------------------------------------------------------------------
 resource "aws_lambda_function" "jae_app_lambda" {
   for_each = var.function_code_config

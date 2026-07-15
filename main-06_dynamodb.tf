@@ -28,7 +28,7 @@ resource "aws_dynamodb_table" "token_dynamodb_table" {
   # this GSI allows you to perform queries based on the outlined schema
   # the schema is must be one (or more) defined attribute from the above attributes.
   global_secondary_index {
-    name            = "token_secondary_index"
+    name            = local.dynamodb_gsi_name
     projection_type = "ALL"
     key_schema {
       attribute_name = "username"
