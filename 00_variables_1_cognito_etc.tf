@@ -1,3 +1,4 @@
+# advised to use tfvars wiith this variable
 variable "lambda_cognito_users" {
   description = "A map to create Cognito Users, with their required information."
   type = map(object({
