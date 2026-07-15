@@ -132,6 +132,6 @@ resource "aws_iam_policy" "custom_detection_policy" {
 resource "aws_iam_role_policy_attachment" "attach_custom_detection_policy" {
   for_each = var.custom_detect_policy
 
-  role       = aws_iam_role.lambda_execution_role.name
+  role       = aws_iam_role.lambda_detection_role.name
   policy_arn = aws_iam_policy.custom_detection_policy[each.key].arn
 }

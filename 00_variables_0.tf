@@ -172,7 +172,7 @@ variable "function_code2_config" {
   }))
 
   default = {
-    python = {
+    detector = {
       # code info for fucntion
       path        = "0.function_code/0.combined_functions"
       source      = "detection_v1_5.py"
