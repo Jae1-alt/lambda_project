@@ -1,4 +1,4 @@
-resource "aws_dynamodb_table" "token-dynamodb-table" {
+resource "aws_dynamodb_table" "token_dynamodb_table" {
   name         = "token_tracking"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "token_id"
@@ -35,9 +35,10 @@ resource "aws_dynamodb_table" "token-dynamodb-table" {
       key_type       = "HASH"
     }
     key_schema {
-      attribute_name = "token_id"
+      attribute_name = "issued_at"
       key_type       = "RANGE"
     }
+
   }
 
   tags = {

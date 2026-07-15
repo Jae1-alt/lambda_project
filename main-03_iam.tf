@@ -60,8 +60,9 @@ resource "aws_iam_policy" "custom_policy" {
   policy = templatefile(
     "${path.module}/${each.value.file_path}",
     {
-      region     = data.aws_region.current.region
-      account_id = data.aws_caller_identity.current.account_id
+      region             = data.aws_region.current.region
+      account_id         = data.aws_caller_identity.current.account_id
+      dynamodb_table_arn = aws_dynamodb_table.token_dynamodb_table.arn
     }
   )
 
