@@ -6,8 +6,16 @@ import boto3
 from datetime import datetime
 
 # Initialize DynamoDB connection
-dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
-table = dynamodb.Table("token-tracking")
+
+# pull the AWS region from the Lambda environment (automatically provided by AWS).
+# pull the table name from an Environment Variable so Terraform can inject it dynamically.
+AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
+TABLE_NAME = os.environ.get("DYNAMODB_TABLE_NAME", "token-tracking")
+
+# Initialize the DynamoDB client and table handle outside the handler 
+# to reuse the connection across warm Lambda invocations.
+dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
+table = dynamodb.Table(TABLE_NAME)
 
 def lambda_handler(event, context):
     print("Incoming event:", json.dumps(event))
