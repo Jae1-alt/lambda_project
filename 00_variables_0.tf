@@ -63,11 +63,11 @@ variable "function_code_config" {
   default = {
     python = {
       # code info for fucntion
-      path        = "0.function_code/2.rbac_functions"
-      source      = "python_rbac_v1_5.py"
-      file_name   = "python_rbac_v1_5"
-      output      = "python_rbac_v1_5.zip"
-      output_path = "0.function_code/2.rbac_functions/zip_files"
+      path        = "0.function_code/0.combined_functions"
+      source      = "python_lambda_v2.py"
+      file_name   = "python_lambda_v2"
+      output      = "python_lambda_v2.zip"
+      output_path = "0.function_code/0.combined_functions/zip_files"
 
       # function config
       description   = "RBAC Python lambda function."
@@ -91,11 +91,11 @@ variable "function_code_config" {
     }
     node = {
       # code info for fucntion
-      path        = "0.function_code/2.rbac_functions"
-      source      = "node_rbac_v1_5.js"
-      file_name   = "node_rbac_v1_5"
-      output      = "node_rbac_v1_5.zip"
-      output_path = "0.function_code/2.rbac_functions/zip_files"
+      path        = "0.function_code/0.combined_functions"
+      source      = "node_lambda_v1.js"
+      file_name   = "node_lambda_v1"
+      output      = "node_lambda_v1.zip"
+      output_path = "0.function_code/0.combined_functions/zip_files"
 
       # function config
       description   = "RBAC Node lambda function."
