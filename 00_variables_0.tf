@@ -31,6 +31,7 @@ variable "custom_policy" {
 # acts as table that will be searched using the values in the 'env_value' section in the 'function_code_config' variable.
 locals {
   env_variables = {
+    "DYNAMODB_TABLE_NAME" = aws_dynamodb_table.token_dynamodb_table.name
     # "SNS_TOPIC_ARN" = aws_sns_topic.simple_lambda_message.arn
   }
 }
