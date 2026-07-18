@@ -11,11 +11,6 @@ resource "aws_dynamodb_table" "token_dynamodb_table" {
   }
 
   attribute {
-    name = "username"
-    type = "S"
-  }
-
-  attribute {
     name = "token_id"
     type = "S"
   }
@@ -25,23 +20,22 @@ resource "aws_dynamodb_table" "token_dynamodb_table" {
     type = "S"
   }
 
-  # this GSI allows you to perform queries based on the outlined schema
-  # the schema is must be one (or more) defined attribute from the above attributes.
+  # This GSI groups all tokens by their 'used' status.
+  # This allows the Detection Lambda to quickly find ALL unused tokens 
+  # across ALL users, and sort them chronologically by 'issued_at'.
   global_secondary_index {
     name            = local.dynamodb_gsi_name
     projection_type = "ALL"
     key_schema {
-      attribute_name = "username"
-      key_type       = "HASH"
-    }
-    key_schema {
       attribute_name = "used"
       key_type       = "HASH"
     }
+
     key_schema {
       attribute_name = "issued_at"
       key_type       = "RANGE"
     }
+
   }
 
   tags = {

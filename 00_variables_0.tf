@@ -55,7 +55,7 @@ locals {
     # "SNS_TOPIC_ARN" = aws_sns_topic.simple_lambda_message.arn
   }
 
-  dynamodb_gsi_name = "token_secondary_index"
+  dynamodb_gsi_name = "Detector_index"
 
 }
 
@@ -175,13 +175,13 @@ variable "function_code2_config" {
     detector = {
       # code info for fucntion
       path        = "0.function_code/0.combined_functions"
-      source      = "detection_v1_5.py"
-      file_name   = "detection_v1_5"
-      output      = "detection_v1_5.zip"
+      source      = "detection_v2_5.py"
+      file_name   = "detection_v2_5"
+      output      = "detection_v2_5.zip"
       output_path = "0.function_code/0.combined_functions/zip_files"
 
       # function config
-      description   = "Python lambda function for Token detection(and adjustment) on DynamoDB table."
+      description   = "Python lambda function for Token detection (and adjustment) on DynamoDB table."
       filename      = null
       function_name = "token_detection_function"
       handler       = "lambda_handler"

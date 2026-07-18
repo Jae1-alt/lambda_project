@@ -67,7 +67,7 @@ resource "aws_lambda_function" "jae_detection_lambda" {
 
   filename      = data.archive_file.detection_lambda_code[each.key].output_path
   function_name = (each.value.function_name)
-  role          = aws_iam_role.lambda_execution_role.arn
+  role          = aws_iam_role.lambda_detection_role.arn
   handler       = "${each.value.file_name}.${each.value.handler}" # this is the lambda hanlder that is defined in the code used in the python function
   code_sha256   = data.archive_file.detection_lambda_code[each.key].output_base64sha256
 

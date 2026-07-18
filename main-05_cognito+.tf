@@ -70,8 +70,8 @@ resource "aws_cognito_user_pool_client" "lambda_api_cognito_client" {
   allowed_oauth_scopes                 = ["openid", "email", "profile"]
   allowed_oauth_flows_user_pool_client = true
   callback_urls                        = ["http://localhost/callback"]
-  logout_urls                          = ["https://localhost/logout"]
-  supported_identity_providers         = ["COGNITO"]
+  # logout_urls                          = ["https://localhost/logout"]
+  supported_identity_providers = ["COGNITO"]
 
   # token lifetimes and settings
   token_validity_units {
@@ -126,14 +126,14 @@ resource "aws_cognito_user_in_group" "example" {
 # Cognito User Pool Domain for Login Page -------------------
 
 resource "aws_cognito_user_pool_domain" "cognito_pool_login_domain" {
-  # this 'domaii' will be the prefix for the FQDN, it must be unique
+  # this 'domain' will be the prefix for the FQDN, it must be unique
   domain       = "jae-lambda-portal-876"
   user_pool_id = aws_cognito_user_pool.lambda_api_cognito_user_pool.id
 }
 
-# Manages login branding settings (for login page) for a user pool style and associates it with an app client.
-resource "aws_cognito_managed_login_branding" "cognito_login_page_style" {
-  client_id                   = aws_cognito_user_pool_client.lambda_api_cognito_client.id
-  user_pool_id                = aws_cognito_user_pool.lambda_api_cognito_user_pool.id
-  use_cognito_provided_values = true
-}
+# # Manages login branding settings (for login page) for a user pool style and associates it with an app client.
+# resource "aws_cognito_managed_login_branding" "cognito_login_page_style" {
+#   client_id                   = aws_cognito_user_pool_client.lambda_api_cognito_client.id
+#   user_pool_id                = aws_cognito_user_pool.lambda_api_cognito_user_pool.id
+#   use_cognito_provided_values = true
+# }

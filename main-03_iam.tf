@@ -4,11 +4,11 @@
 
 # role for authZ lambda  functions
 resource "aws_iam_role" "lambda_execution_role" {
-  name               = "lambda-soar-project-role"
+  name               = "lambda-authz-project-role"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 
   tags = {
-    Name        = "atuhz-lambda-role"
+    Name        = "authz-lambda-role"
     Environment = "Test"
     Managed_by  = "Terraform"
   }
@@ -16,7 +16,7 @@ resource "aws_iam_role" "lambda_execution_role" {
 
 # role for detection lambda function 
 resource "aws_iam_role" "lambda_detection_role" {
-  name               = "lambda-soar-detction-role"
+  name               = "lambda-soar-detection-role"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 
   tags = {
