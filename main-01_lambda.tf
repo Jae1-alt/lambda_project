@@ -83,7 +83,7 @@ resource "aws_lambda_function" "jae_detection_lambda" {
     # as AWS Lambda environment variables do not accept raw primitives/objects.
     # Lists/maps are converted to JSON strings; booleans/numbers become plain strings.
     variables = {
-      for k, v in merge(each.value.env_value, local.env_variables) : k => (
+      for k, v in merge(each.value.env_value, local.env_variables_detect) : k => (
         can(tolist(v)) || can(tomap(v)) ? jsonencode(v) : tostring(v)
       )
     }

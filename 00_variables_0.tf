@@ -55,6 +55,13 @@ locals {
     # "SNS_TOPIC_ARN" = aws_sns_topic.simple_lambda_message.arn
   }
 
+  # security practice, separating environmetal varibales created for the detection lambda
+  env_variables_detect = {
+    "DYNAMODB_TABLE_NAME" = aws_dynamodb_table.token_dynamodb_table.name
+    "GSI_NAME"            = local.dynamodb_gsi_name
+
+  }
+
   dynamodb_gsi_name = "Detector_index"
 
 }

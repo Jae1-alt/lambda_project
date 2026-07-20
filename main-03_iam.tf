@@ -67,12 +67,12 @@ resource "aws_iam_role_policy_attachment" "attach_managed_detection_policy" {
 # -------------------------------------------------------------------
 
 # These resources use the 'var.custom_policy' variable to dynamically create
-# custom policies based on the 'json' files they reference
-resource "aws_iam_policy" "custom_policy" {
+# custom inline policies based on the 'json' files they reference
+resource "aws_iam_role_policy" "custom_execution_policy" {
   for_each = var.custom_policy
 
-  name        = "${each.key}-json-policy"
-  description = each.value.description
+  name = "${each.key}-json-policy"
+  role = aws_iam_role.lambda_execution_role.id
 
   # The templatefile function reads the external file (referenced in this case). 
   # Passing an empty map {} satisfies the function signature while allowing 
@@ -85,30 +85,24 @@ resource "aws_iam_policy" "custom_policy" {
       dynamodb_table_arn = aws_dynamodb_table.token_dynamodb_table.arn
     }
   )
-
-  tags = {
-    Name        = "${each.key}-policy"
-    Environment = "Test"
-    Managed_by  = "Terraform"
-  }
 }
 
-resource "aws_iam_role_policy_attachment" "attach_custom_policy" {
-  for_each = var.custom_policy
+# resource "aws_iam_role_policy_attachment" "attach_custom_policy" {
+#   for_each = var.custom_policy
 
-  role       = aws_iam_role.lambda_execution_role.name
-  policy_arn = aws_iam_policy.custom_policy[each.key].arn
-}
+#   role       = aws_iam_role.lambda_execution_role.name
+#   policy_arn = aws_iam_policy.custom_policy[each.key].arn
+# }
 
 # -------------------------------------------------------------------
 # Custom Policy & Role Attachements for Detection Role
 # -------------------------------------------------------------------
 
-resource "aws_iam_policy" "custom_detection_policy" {
+resource "aws_iam_role_policy" "custom_detection_policy" {
   for_each = var.custom_detect_policy
 
-  name        = "${each.key}-json-policy"
-  description = each.value.description
+  name = "${each.key}-json-policy"
+  role = aws_iam_role.lambda_detection_role.id
 
   # The templatefile function reads the external file (referenced in this case). 
   # Passing an empty map {} satisfies the function signature while allowing 
@@ -121,17 +115,11 @@ resource "aws_iam_policy" "custom_detection_policy" {
       dynamodb_table_arn = aws_dynamodb_table.token_dynamodb_table.arn
     }
   )
-
-  tags = {
-    Name        = "${each.key}-policy"
-    Environment = "Test"
-    Managed_by  = "Terraform"
-  }
 }
 
-resource "aws_iam_role_policy_attachment" "attach_custom_detection_policy" {
-  for_each = var.custom_detect_policy
+# resource "aws_iam_role_policy_attachment" "attach_custom_detection_policy" {
+#   for_each = var.custom_detect_policy
 
-  role       = aws_iam_role.lambda_detection_role.name
-  policy_arn = aws_iam_policy.custom_detection_policy[each.key].arn
-}
+#   role       = aws_iam_role.lambda_detection_role.name
+#   policy_arn = aws_iam_policy.custom_detection_policy[each.key].arn
+# }
