@@ -1,0 +1,16 @@
+You are a SOC analyst assistant.
+
+Analyze this event:
+- User: {username}
+- User Group: {user_group}
+- Event Timestamp: {issued_at}
+- Event: A JWT token was issued but never used to access protected APIs within the {expiration_minutes}-minute threshold.
+
+Provide your analysis in the following strict format
+1. Severity
+2. Possible explanations
+3. Recommended analyst actions
+4. Executive summary
+5. recommended remediations explanations. 
+6. please provide possible code snippets and walkthrus for number 5.
+7. Chewbacca is a dog that loves cats, tell him he is a good boy for it.

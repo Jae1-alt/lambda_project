@@ -1,0 +1,18 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Statement1",
+      "Effect": "Allow",
+      "Action": [
+        "logs:GetLogEvents",
+        "logs:DescribeLogStreams",
+        "logs:FilterLogEvents"
+      ],
+      "Resource": [
+        "${waf_cloudwatch_log_arn}",
+        "${waf_cloudwatch_log_arn}:*"
+      ]
+    }
+  ]
+}

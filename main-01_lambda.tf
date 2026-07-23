@@ -15,10 +15,18 @@ data "archive_file" "app_lambda_code" {
 }
 
 data "archive_file" "detection_lambda_code" {
-  for_each = var.function_code2_config
+  for_each = var.token_detector_function_config
 
   type        = "zip"
-  source_file = "${path.module}/${each.value.path}/${each.value.source}"
+  source_dir  = "${path.module}/${each.value.path}/${each.value.source}"
+  output_path = "${path.module}/${each.value.output_path}/${each.value.output}"
+}
+
+data "archive_file" "waf_bedrock_analyzer_lambda_code" {
+  for_each = var.waf_analyzer_function_config
+
+  type        = "zip"
+  source_dir  = "${path.module}/${each.value.path}/${each.value.source}"
   output_path = "${path.module}/${each.value.output_path}/${each.value.output}"
 }
 
@@ -52,6 +60,9 @@ resource "aws_lambda_function" "jae_app_lambda" {
     }
   }
 
+  depends_on = [
+    aws_cloudwatch_log_group.app_lambda_logs
+  ]
   tags = {
     Name        = "${each.value.function_name}-lambda-function"
     Environment = "Test"
@@ -63,7 +74,7 @@ resource "aws_lambda_function" "jae_app_lambda" {
 # Detection Lambda Function + 
 # -------------------------------------------------------------------
 resource "aws_lambda_function" "jae_detection_lambda" {
-  for_each = var.function_code2_config
+  for_each = var.token_detector_function_config
 
   filename      = data.archive_file.detection_lambda_code[each.key].output_path
   function_name = (each.value.function_name)
@@ -73,6 +84,7 @@ resource "aws_lambda_function" "jae_detection_lambda" {
 
   architectures = [each.value.architecture]
   runtime       = (each.value.runtime)
+  timeout       = each.value.timeout
 
   description = (each.value.description)
 
@@ -83,11 +95,53 @@ resource "aws_lambda_function" "jae_detection_lambda" {
     # as AWS Lambda environment variables do not accept raw primitives/objects.
     # Lists/maps are converted to JSON strings; booleans/numbers become plain strings.
     variables = {
-      for k, v in merge(each.value.env_value, local.env_variables_detect) : k => (
+      for k, v in merge(each.value.env_value, local.env_variables_detector) : k => (
         can(tolist(v)) || can(tomap(v)) ? jsonencode(v) : tostring(v)
       )
     }
   }
+
+  depends_on = [
+    aws_cloudwatch_log_group.detector_lambda_logs
+  ]
+
+  tags = {
+    Name        = "${each.value.function_name}-lambda-function"
+    Environment = "Test"
+    Managed_by  = "Terraform"
+  }
+}
+
+# -------------------------------------------------------------------
+# WAF Lambda Function + 
+# -------------------------------------------------------------------
+resource "aws_lambda_function" "jae_waf_lambda" {
+  for_each = var.waf_analyzer_function_config
+
+  filename      = data.archive_file.waf_bedrock_analyzer_lambda_code[each.key].output_path
+  function_name = (each.value.function_name)
+  role          = aws_iam_role.lambda_waf_bedrock_analyzer_role.arn
+  handler       = "${each.value.file_name}.${each.value.handler}" # this is the lambda hanlder that is defined in the code used in the python function
+  code_sha256   = data.archive_file.waf_bedrock_analyzer_lambda_code[each.key].output_base64sha256
+
+  architectures = [each.value.architecture]
+  runtime       = (each.value.runtime)
+  timeout       = each.value.timeout
+
+  description = (each.value.description)
+
+  environment {
+    variables = {
+      for k, v in merge(each.value.env_value, local.env_variables_waf_analyzer) : k => (
+        can(tolist(v)) || can(tomap(v)) ? jsonencode(v) : tostring(v)
+      )
+    }
+  }
+
+  depends_on = [
+    aws_cloudwatch_log_group.waf_logs,
+    aws_cloudwatch_log_group.waf_analyzer_lambda_logs
+  ]
 
   tags = {
     Name        = "${each.value.function_name}-lambda-function"

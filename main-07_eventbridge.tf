@@ -26,7 +26,7 @@ resource "aws_cloudwatch_event_rule" "unused_token_check" {
 # -------------------------------------------------------------------
 
 resource "aws_cloudwatch_event_target" "unused_token_target" {
-  for_each = var.function_code2_config
+  for_each = var.token_detector_function_config
 
   rule = aws_cloudwatch_event_rule.unused_token_check.name
   arn  = aws_lambda_function.jae_detection_lambda[each.key].arn
@@ -38,7 +38,7 @@ resource "aws_cloudwatch_event_target" "unused_token_target" {
 # -------------------------------------------------------------------
 
 resource "aws_lambda_permission" "allow_eventbridge" {
-  for_each = var.function_code2_config
+  for_each = var.token_detector_function_config
 
   statement_id  = "AllowExecutionFromEventBridge"
   action        = "lambda:InvokeFunction"

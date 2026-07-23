@@ -1,175 +1,190 @@
+# 🛡️ Cloud-Native SOAR & AI-Driven Threat Intelligence Platform
 
-# 🛡️ AWS Serverless RBAC & Authentication Platform
+## 📖 Project Overview
+This repository documents the architecture, infrastructure, and codebase for a comprehensive **Security Orchestration, Automation, and Response (SOAR)** platform. 
 
-> A living engineering portfolio and Infrastructure-as-Code project documenting the design, implementation, and debugging of a secure, multi-language serverless architecture on AWS.
-
-This project implements a production-ready **Role-Based Access Control (RBAC)** system, layered over **Amazon Cognito authentication**, **API Gateway routing**, and **AWS WAF edge protection**. It features Python and Node.js Lambda functions, Terraform-driven infrastructure, JWT token verification, and an emerging telemetry pipeline for token lifecycle tracking.
-
----
-
-## 🏛️ System Architecture & Core Principles
-
-### The "Bouncer & Bartender" Paradigm
-To conceptualize the division of security responsibilities across the AWS infrastructure, this architecture utilizes a strict separation between Authentication (AuthN) and Authorization (AuthZ):
-
-*   **The Bouncer (API Gateway + Cognito Authorizer):** Handles the heavy cryptographic lifting. It intercepts HTTP requests, verifies the JWT signature against Cognito's public keys (JWKS), and checks expiration. If the token is invalid, it rejects the request immediately with a `401 Unauthorized`. If valid, it passes the request to the compute layer with an enriched payload containing the user's `cognito:groups`.
-*   **The Bartender (AWS Lambda):** Receives the enriched event payload and focuses purely on business logic and fine-grained access control. It evaluates the user's groups against the specific route requirements. If the user lacks the required role, it returns a `403 Forbidden`.
-
-### Security & Design Principles
-
-| Principle | Implementation |
-| :--- | :--- |
-| **Defense in Depth** | Explicit route validation (`event.resource`) combined with group validation inside the Lambda function, operating independently of API Gateway routing. |
-| **Least Privilege** | Explicit `Allow` logic. The system defaults to `deny-all`. Access is only granted when identity claims mathematically intersect with route requirements. |
-| **Separation of Concerns** | AuthN (Cognito) is decoupled from AuthZ (Lambda). Infrastructure configuration is decoupled from compute code via serialized environment variables. |
-| **Enterprise Mapping** | Cognito Groups map to Active Directory Security Groups. Cognito Users map to AD Users. Group Membership maps to Role Assignment. |
+What began as a stateful API authentication system has evolved into a multi-pipeline security engine. The platform actively manages **Identity and Access**, monitors **internal application state** (abandoned JWT tokens), and defends the **external perimeter** (WAF blocks, DDoS, XSS). It utilizes **Amazon Bedrock (Generative AI)** to translate raw, dense cloud telemetry into human-readable SOC (Security Operations Center) incident summaries.
 
 ---
 
-## 📂 Project Structure
+## 🔐 Identity & Access: Cognito + API Gateway
+The foundation of this entire platform rests on a secure, token-based authentication flow. Before any security telemetry can be generated or analyzed, users must securely prove their identity.
 
-```text
-├── 0_Images
-│   ├── SMS_MFA-Challenge_Code.png
-│   └── Software_Token_MFA-Challenge.png
-├── 0_notes
-│   ├── 0.Obstacles_Debugging
-│   │   ├── 01.Obstacles_passed.md
-│   │   └── 02.Obstacles_passed.md
-│   └── 1.Project_Documentations
-│       ├── 01.Lambda_API-GW_WAF_etc
-│       │   └── 01.Part1_API-GW_WAF_etc.md
-│       ├── 02.Cognito_Authentication_etc
-│       │   ├── 01.Cognito_integration_&_Authentication.md
-│       │   ├── 02.Infrastructure_Implementation-Authorizering_Cognito_to_API-GW.md
-│       │   ├── 03.Execution_and_Authentication.md
-│       │   └── 04.Debugging_&_Edge_Cases.md
-│       └── 03.RBAC
-│           ├── 01.RBAC_Architectual_Foundations.md
-│           ├── 02.Infra_&_Terraform_Quirks.md
-│           ├── 03.Compute_Implementation_&_Quirks.md
-│           └── 04.Idenity_Verification_&_Debugging.md
-├── 0.function_code
-│   ├── 1.initial_functions
-│   │   ├── chewbacca-node-lambda.js
-│   │   ├── chewbacca-python-lambda.py
-│   │   └── zip_files
-│   │       ├── chewbacca-python-lambda.zip
-│   │       └── lambda_node_fucntion.zip
-│   └── 2.rbac_functions
-│       ├── node_rbac_v1_5.js
-│       ├── python_rbac_v1_5.py
-│       └── zip_files
-│           ├── node_rbac_v1_5.zip
-│           └── python_rbac_v1_5.zip
-├── 0.policies
-│   ├── lambda_to_bedrock_invoke.json
-│   ├── lambda_to_dynamodb.json
-│   └── waf_role.json
-├── 0.python_codes
-│   ├── easier_get_token_v2.py
-│   ├── flavor_get_token.py
-│   ├── token.txt
-│   └── verify_groups_v1_5.py
-├── 00_variables_0.tf
-├── 00_variables_1_cognito_etc.auto.tfvars
-├── 00_variables_1_cognito_etc.tf
-├── 00.auth.tf
-├── 00.data.tf
-├── 1.older_codes
-│   ├── lambda_function_codes
-│   │   ├── node_rbac.js
-│   │   ├── python_rbac_v1.py
-│   │   ├── python_rbac.py
-│   │   └── route_rbac_v1.py
-│   └── python_codes
-│       ├── easier_get_token_edit1.py
-│       ├── easier_get_token_templ.py
-│       ├── secret_hash.py
-│       └── verify_groups.py
-├── main-01_lambda.tf
-├── main-02_api_gateways+.tf
-├── main-03_iam.tf
-├── main-04_waf.tf
-├── main-05_cognito+.tf
-└── output.tf
+### 1. Amazon Cognito (The Identity Provider)
+The platform uses an **Amazon Cognito User Pool** to manage user directories, handle secure sign-ups/sign-ins, and issue **JSON Web Tokens (JWTs)**. 
+* When a user authenticates, Cognito returns an Access Token and an ID Token.
+* These tokens contain cryptographically signed claims about the user's identity and permissions.
+
+### 2. API Gateway Cognito Authorizer (Gate 2)
+API Gateway sits in front of the backend Lambda functions and acts as the application-level bouncer. 
+* It is configured with a **Cognito Authorizer**. 
+* When a client makes a request, they must include the JWT in the `Authorization: Bearer <token>` header.
+* API Gateway intercepts the request, fetches the public keys from the Cognito User Pool, and verifies the token's signature and expiration locally. 
+* **The Result:** If the token is invalid or expired, API Gateway instantly rejects the request with a `401 Unauthorized` or `403 Forbidden` *before* the backend Lambda is ever invoked, saving compute costs and protecting the application logic.
+
+### 3. The Stateful Ledger
+Because JWTs are stateless by design, the backend Lambda maintains a **DynamoDB Ledger** to track token issuance and usage. This stateful tracking is the exact mechanism that allows the SOAR "Janitor" pipeline (detailed below) to detect abandoned or anomalous authentication sessions.
+
+---
+
+## 🏗️ Architecture: The Dual-Pipeline SOAR Model
+With identity established, the platform operates on two distinct, automated security pipelines that feed into a centralized threat intelligence model.
+
+### Pipeline 1: Internal State Remediation (The "Janitor")
+Monitors the internal DynamoDB ledger for abandoned authentication tokens.
+1. **EventBridge** triggers a "Janitor" Lambda on a schedule.
+2. The Lambda queries DynamoDB for tokens that were issued by Cognito but never used to access protected APIs within the expiration window.
+3. The telemetry is sent to **Amazon Bedrock** to generate a risk assessment of the abandoned session.
+4. The token is deterministically marked as `expired` in the database, and the AI summary is logged for the security team.
+
+### Pipeline 2: Edge Perimeter Defense (WAF Telemetry)
+Monitors the absolute edge of the network for malicious payloads and brute-force attempts.
+1. **AWS WAF (Gate 1)** inspects incoming API Gateway traffic. Malicious requests are dropped at the edge (`403 Forbidden`).
+2. WAF streams dense JSON telemetry to a **CloudWatch Logs Buffer**.
+3. A "Detective" Lambda queries the logs via time-window lookbacks (`FilterLogEvents`).
+4. The Lambda extracts critical threat indicators (IP, URI, Rule ID) and persists them to a **Threat Intelligence DynamoDB Table** (`waf-events`).
+5. The context is sent to **Amazon Bedrock** to generate an executive threat summary.
+
+```mermaid
+flowchart TD
+    User((User / Attacker))
+
+    subgraph Gates ["🛡️ 1. The Two-Gate Ingress"]
+        WAF{AWS WAF\nGate 1}
+        APIGW{API Gateway\nGate 2: Cognito}
+        Lambda[Backend Lambda]
+        Reject((🚫 Drop / Reject))
+    end
+
+    subgraph DataStores ["📊 2. Telemetry & State Data Stores"]
+        LedgerDB[("DynamoDB Ledger\n(Auth State)")]
+        CW["CloudWatch Buffer\n(WAF Logs)"]
+        ThreatDB[("Threat Intel DB\nwaf-events")]
+        
+        %% INVISIBLE ANCHORS: Forces strict Left-to-Right layout
+        LedgerDB ~~~ CW ~~~ ThreatDB
+    end
+
+    subgraph SOAR ["🤖 3. SOAR Automation & AI Enrichment"]
+        EB[EventBridge Cron]
+        Janitor[Janitor Lambda]
+        Detective[Detective Lambda]
+        Bedrock((Amazon Bedrock\nGenAI))
+        Alerts[CloudWtach Logs]
+        
+        %% INVISIBLE ANCHORS: Forces Janitor Left, Detective Right
+        Janitor ~~~ Detective
+    end
+
+    %% Ingress Flow (Clean Reject Connections)
+    User -->|1. HTTP Request| WAF
+    WAF -->|❌ 403 Block| Reject
+    WAF -->|✅ 2. Allow| APIGW
+    APIGW -->|❌ 401 Unauth| Reject
+    APIGW -->|✅ 3. Valid JWT| Lambda
+
+    %% Data Flow
+    Lambda -->|Log Token Issuance| LedgerDB
+    WAF -.->|Stream JSON Logs| CW
+
+    %% SOAR Flow (Natural Crossings)
+    EB -->|Trigger| Janitor
+    Janitor <-->|Query & Update\nStale Tokens| LedgerDB
+    
+    Detective -->|FilterLogEvents| CW
+    Detective -->|Persist Findings| ThreatDB
+
+    %% AI Enrichment (Explicit Context Sources)
+    Janitor -->|Context: Abandoned Tokens| Bedrock
+    Detective -->|Context: Edge Threat Intel| Bedrock
+    Bedrock -->|SOC Summaries| Alerts
+
+    %% GitHub Styling
+    classDef gate fill:#f9d0c4,stroke:#e35d4f,stroke-width:2px,color:#000;
+    classDef db fill:#d4edda,stroke:#28a745,stroke-width:2px,color:#000;
+    classDef ai fill:#e2d4f0,stroke:#6f42c1,stroke-width:2px,color:#000;
+    classDef lambda fill:#fff3cd,stroke:#ffc107,stroke-width:2px,color:#000;
+    classDef reject fill:#f8d7da,stroke:#dc3545,stroke-width:2px,color:#000;
+
+    class WAF,APIGW gate;
+    class LedgerDB,ThreatDB,CW db;
+    class Bedrock ai;
+    class Lambda,Janitor,Detective lambda;
+    class Reject reject;
 ```
 
 ---
 
-## 🚀 Implementation Phases
+## 🧠 Core Engineering Triumphs & "Gotchas" Solved
 
-### ✅ Phase 1: Core API & Edge Security [Complete]
-*   API Gateway routing for multi-language endpoints (`/python`, `/node`).
-*   AWS WAF WebACL deployment for edge-layer rate limiting and common exploit protection.
-*   Terraform IaC modularization (`main-01` through `main-04`).
+Building this platform required navigating several complex cloud engineering challenges:
 
-### ✅ Phase 2: Identity & Authentication (Cognito) [Complete]
-*   Cognito User Pool creation with MFA challenges (SMS & Software Token).
-*   JWT token generation, validation, and claim extraction.
-*   Discovery of OAuth2 token boundaries: **ID Tokens** (contain `email`, `cognito:username`) vs **Access Tokens** (contain `username`, `scope`, `cognito:groups`).
-*   API Gateway Cognito Authorizer mapping to inject claims into Lambda events.
+### 1. The Golden Rule of AI SOAR: Persist First
+In security automation, AI is a luxury; data persistence is a necessity. Both Lambda pipelines are engineered to save or update the security telemetry in DynamoDB **before** invoking the Bedrock AI model. If the AI service experiences an outage, throttling, or billing error, the security workflow degrades gracefully, and zero evidence is lost.
 
-### ✅ Phase 3: Authorization & RBAC Compute Layer [Complete]
-*   Refactored Python & Node.js Lambda functions with **Explicit Allow** logic.
-*   Environment variable serialization: `jsonencode()` in Terraform mapped to `json.loads()` / `JSON.parse()` in compute.
-*   **Terraform "Flattening Engine"**: Nested `for` expressions combined with `flatten()` to map many-to-many user-group relationships.
-*   Debugged Terraform literal type unification, Lambda handler dot-notation crashes, and missing standard library imports.
+### 2. The CloudWatch Log Group Race Condition
+To prevent AWS Lambda from auto-creating CloudWatch Log Groups with "Never Expire" retention policies (which causes Terraform state drift), all Log Groups are explicitly provisioned in Terraform. The `depends_on` meta-argument is used to enforce strict creation order, ensuring IaC manages the lifecycle and compliance retention rules from Day 1.
 
-### 🔄 Phase 4: Telemetry & Token Lifecycle [In Progress]
-*   DynamoDB `token-tracking` table for single-use token telemetry.
-*   `get_token.py` refactored as an Auth Utility and Telemetry Producer.
-*   EventBridge Scheduler (`rate(5 minutes)`) triggering the `unused-token-detector` Lambda.
-*   CloudWatch alerting for stale/unused tokens.
-*   *Next:* Implementing Conditional DynamoDB writes to prevent race-condition replay attacks.
+### 3. Dynamic IAM & The `templatefile` Tuple Trap
+Hardcoding AWS Account IDs in JSON IAM policies breaks environment portability. However, passing Terraform resources created with `for_each` loops into `templatefile()` results in a "tuple" interpolation error, injecting literal brackets `["..."]` into the IAM ARN. This was solved by stripping raw JSON templates of markdown comments, validating syntax, and utilizing exact bracket notation (e.g., `aws_cloudwatch_log_group.waf_logs["key"].arn`) to inject precise, least-privilege ARNs dynamically.
+
+### 4. Graceful Degradation & The Billing Gatekeeper
+Third-party AI models routed through the AWS Marketplace are subject to strict billing gatekeepers. Using `botocore.exceptions.ClientError`, the Python orchestration layer inspects specific AWS API error codes. If an `AccessDeniedException` related to marketplace billing occurs, the Lambda logs a clean `[WARN]` message and safely bypasses the AI step, ensuring the security pipeline remains unbroken.
+
+### 5. Separation of Logic and Content
+AI Prompts are strictly separated from Python orchestration logic. Prompts are stored in external `.txt` files and injected at runtime. This allows security analysts to tweak AI instructions (e.g., changing the desired SOC output format) without requiring a Python developer to modify and redeploy the Lambda codebase.
 
 ---
 
-## 💡 Engineering Lessons & Debugged Edge Cases
-
-| Challenge | Root Cause | Resolution |
-| :--- | :--- | :--- |
-| **Terraform Type Unification Crash** | Mixed strings and lists in a `default = {}` block before the type constraint was applied. | Enforced structural parity (e.g., `env_value = {}`) or moved complex configuration to `locals`. |
-| **JWT Base64 Decoding Failure** | JWT spec strips `=` padding; Python `base64.urlsafe_b64decode` strictly requires it. | Added padding fix: `payload += '=' * (-len(payload) % 4)` |
-| **Terminal `input()` Truncation** | Interactive line buffers limit paste length and confuse bracketed paste modes. | Refactored script to read from `token.txt` via `file.read().strip()` |
-| **Lambda Handler Dot Crash** | `python_rbac_v1.5.lambda_handler` caused Python to interpret `.` as a package separator. | Renamed file to `python_rbac_v1_5.py` and updated the handler string. |
-| **Missing `email` in Access Tokens** | Access Tokens intentionally exclude PII per the OAuth2 specification. | Enforced ID Token usage for the API Gateway `Authorization` header. |
+## 🛠️ Tech Stack
+* **Identity & Access:** Amazon Cognito (User Pools, JWTs), API Gateway Authorizers
+* **Cloud Security:** AWS WAFv2 (Managed Rules, Custom Rate-Limiting), Principle of Least Privilege IAM
+* **Compute & Integration:** AWS Lambda, EventBridge, CloudWatch Logs
+* **Data & AI:** DynamoDB, Amazon Bedrock (Anthropic Claude / Amazon Titan)
+* **Infrastructure as Code:** Terraform (`templatefile`, `for_each`, `depends_on`, `archive_file`)
+* **Language:** Python 3.x (`boto3`, `botocore`)
 
 ---
 
-## ⚙️ How to Deploy & Test
+## 🧪 How to Test the Pipelines
 
-**1. Provision Infrastructure:**
-```bash
-terraform init
-terraform plan
-terraform apply -auto-approve
-```
+### Test 1: The Identity Flow (Cognito + API Gateway)
+1. Authenticate against the Cognito User Pool to retrieve a valid JWT Access Token.
+2. Make a request to the protected API Gateway endpoint using the header: `Authorization: Bearer <your_jwt>`.
+3. **Expected:** `200 OK`. The API Gateway Authorizer validates the signature and routes to Lambda.
+4. Make the same request *without* the header or with a fake/expired token.
+5. **Expected:** `401 Unauthorized` or `403 Forbidden` directly from API Gateway.
 
-**2. Generate & Verify Tokens:**
-```bash
-python 0.python_codes/easier_get_token_v2.py > token.txt
-python 0.python_codes/verify_groups_v1_5.py  # Reads token.txt
-```
+### Test 2: The Edge Perimeter (WAF Rate-Limit)
+The WAF is configured with a custom evaluation window (`10 requests per 300 seconds`). 
+1. Run this bash loop to simulate a credential-stuffing attack (WAF counts these requests *before* API Gateway evaluates the Cognito token):
+   ```bash
+   for i in {1..15}; do 
+     echo "Request $i: $(curl -s -o /dev/null -w '%{http_code}' "https://<api-gateway-url>/prod/python?name=tee")"
+   done
+   ```
+2. **Wait 60 seconds** for the WAF telemetry buffer to stream to CloudWatch.
+3. Invoke the **Detective Lambda** manually via the AWS Console.
+4. Verify the `waf-events` DynamoDB table for the newly persisted attacker IP and Rule ID.
 
-**3. Test RBAC Endpoints:**
-```bash
-curl -X GET "https://<api-id>.execute-api.<region>.amazonaws.com/prod/python" \
-  -H "Authorization: <ID_TOKEN>"
-```
+### Test 3: The Edge Perimeter (XSS Payload)
+1. Send a malicious payload (URL-encoded to prevent bash redirection errors):
+   ```bash
+   curl -s -o /dev/null -w '%{http_code}' "https://<api-gateway-url>/prod/python?name=%3Cscript%3Ealert(1)%3C/script%3E"
+   ```
+2. Expect an immediate `403 Forbidden` from the WAF edge shield.
+3. Invoke the **Detective Lambda** and check CloudWatch for the AI-generated SOC summary detailing the Cross-Site Scripting attempt.
+
+### Test 4: Internal State (The Janitor)
+1. Authenticate via Cognito to generate a valid JWT token, which the backend logs in the DynamoDB Ledger.
+2. Allow the token to sit unused past the expiration threshold.
+3. Trigger the **Janitor Lambda** (or wait for the EventBridge cron).
+4. Verify the token's state is updated to `expired` and check the logs for the AI's analysis of the abandoned session.
 
 ---
 
-## 🗺️ Roadmap & Continuous Evolution
+## 🔮 Future Roadmap
+* [ ] **Automated EventBridge Routing:** Transition the WAF Detective Lambda from manual invocation to an automated EventBridge schedule.
+* [ ] **SNS / Slack Integration:** Route the AI-generated SOC summaries to an SNS Topic for real-time push alerts to the security team.
+* [ ] **SOAR Correlation Agent:** Build a secondary Lambda to query the `waf-events` table, identify repeat offenders (e.g., an IP hitting XSS and SQLi rules on different days), and automatically update network ACLs to block the IP at the VPC level.
 
-- [ ] Implement DynamoDB `ConditionalCheckFailedException` handling for race-condition protection.
-- [ ] Enable WAF logging with CloudWatch Resource Policy and header redaction.
-- [ ] Replace EventBridge polling with DynamoDB Streams for real-time token detection.
-- [ ] Integrate SOAR playbooks for automated threat response.
-- [ ] Add Terraform state locking, CI/CD pipeline, and automated security scanning.
-
-> *This README is a living document. As the architecture evolves and new engineering challenges are solved, this file will be updated to reflect the current system state, security posture, and deployment patterns.*
-
----
-**Built with:** Terraform | AWS Lambda | API Gateway | Cognito | DynamoDB | EventBridge | WAF | Python | Node.js  
-**Status:** 🟢 Active Development |

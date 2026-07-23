@@ -2,7 +2,7 @@
 # AWS WAF + 
 # -------------------------------------------------------------------
 resource "aws_wafv2_web_acl" "api_waf" {
-  name  = "api-waf"
+  name  = "aws-waf-logs-api-1"
   scope = "REGIONAL"
   default_action {
     allow {}
@@ -71,7 +71,7 @@ resource "aws_wafv2_web_acl_rule" "rate_limit_web_acl_rule" {
   }
 }
 
-# Attach WAF to API Gateway ----------------------------------------
+# Attach WAF API Gateway ----------------------------------------
 
 # for the resource_arn in the below WAF Web ACL association the format should be:
 # "arn:partition:apigateway:region::/restapis/api-id/stages/stage-name"
@@ -89,3 +89,13 @@ resource "aws_wafv2_web_acl_association" "api_assoc" {
 # also note that waf acl - api association can only be done with a rest api
 # Doc: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_association
 
+# WAF Logging Configuration ------------------------------------------
+
+resource "aws_wafv2_web_acl_logging_configuration" "logging" {
+
+  log_destination_configs = [
+    aws_cloudwatch_log_group.waf_logs.arn
+  ]
+
+  resource_arn = aws_wafv2_web_acl.api_waf.arn
+}

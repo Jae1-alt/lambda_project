@@ -19,10 +19,6 @@ variable "custom_policy" {
   }))
 
   default = {
-    lambda-invoke-bedrock = {
-      file_path   = "0.policies/lambda_to_bedrock_invoke.json"
-      description = "Policy allowing lambda to invoke bedrock."
-    }
     lambda-to-dynamodb = {
       file_path   = "0.policies/lambda_to_dynamodb_put.json"
       description = "Policy allowing lambda access to manipulate objects in DynamoDB."
@@ -43,11 +39,42 @@ variable "custom_detect_policy" {
       file_path   = "0.policies/lambda_to_dynamodb.json"
       description = "Policy allowing lambda access to manipulate objects in DynamoDB."
     }
+
+    lambda-invoke-bedrock = {
+      file_path   = "0.policies/lambda_to_bedrock_invoke.json"
+      description = "Policy allowing lambda to invoke bedrock."
+    }
   }
 }
 
-# special locals for environmental variables to be used in lambda function /
-# acts as table that will be searched using the values in the 'env_value' section in the 'function_code_config' variable.
+# Custom Policy for waf_bedrock_analyzer Lmabda function 
+variable "custom_waf_bedrock_analyzer_policy" {
+  description = "Map to create custom policies for detection lambda: description and file path."
+  type = map(object({
+    file_path   = string
+    description = optional(string)
+  }))
+
+  default = {
+    lambda-to-dynamodb-detect = {
+      file_path   = "0.policies/lambda_to_dynamodb.json"
+      description = "Policy allowing lambda access to manipulate objects in DynamoDB."
+    }
+
+    lambda-invoke-bedrock = {
+      file_path   = "0.policies/lambda_to_bedrock_invoke.json"
+      description = "Policy allowing lambda to invoke bedrock."
+    }
+
+    waf-access = {
+      file_path   = "0.policies/cw_waf_log_access.json"
+      description = "Policy allowing lambda to access waf logs in cloudwatch."
+    }
+  }
+}
+
+# special locals for environmental variables to be used in lambda functions
+# where applicable, it will be mereged with the env_value in each lambda config variable, to create Lambda Environmental Variables.
 locals {
   env_variables = {
     "DYNAMODB_TABLE_NAME" = aws_dynamodb_table.token_dynamodb_table.name
@@ -56,13 +83,25 @@ locals {
   }
 
   # security practice, separating environmetal varibales created for the detection lambda
-  env_variables_detect = {
+  env_variables_detector = {
     "DYNAMODB_TABLE_NAME" = aws_dynamodb_table.token_dynamodb_table.name
     "GSI_NAME"            = local.dynamodb_gsi_name
-
+    "EXPIRATION_MINUTES"  = "10"
+    "BEDROCK_MODEL_ID"    = local.bedrock_model_id
   }
 
+  env_variables_waf_analyzer = {
+    "DYNAMODB_TABLE" = aws_dynamodb_table.waf_events.name
+    "WAF_LOG_GROUP"  = aws_cloudwatch_log_group.waf_logs.name
+    "LOOKBACK_MINUTES" = "10"
+    "BEDROCK_MODEL_ID" = local.bedrock_model_id
+  }
+
+  # name of the GSI in bedrock
   dynamodb_gsi_name = "Detector_index"
+
+  # model inference ID for LLM model used in Bedrock (passed to python and IAM policy)
+  bedrock_model_id = "us.anthropic.claude-opus-4-6-v1"
 
 }
 
@@ -102,7 +141,7 @@ variable "function_code_config" {
       # function config
       description   = "RBAC Python lambda function."
       filename      = null
-      function_name = "python1_function"
+      function_name = "python-function-1"
       handler       = "lambda_handler"
       architecture  = "x86_64"
       runtime       = "python3.14"
@@ -130,7 +169,7 @@ variable "function_code_config" {
       # function config
       description   = "RBAC Node lambda function."
       filename      = null
-      function_name = "node1_function"
+      function_name = "node-function-1"
       handler       = "handler"
       architecture  = "x86_64"
       runtime       = "nodejs24.x"
@@ -154,7 +193,7 @@ variable "function_code_config" {
 }
 
 # varibale for detection lambda
-variable "function_code2_config" {
+variable "token_detector_function_config" {
   description = "Lmabda function setting with some API config settings."
   type = map(object({
     path        = string
@@ -170,41 +209,84 @@ variable "function_code2_config" {
     handler       = string
     architecture  = optional(string)
     runtime       = optional(string)
+    timeout       = optional(any)
 
     # environment variables
     env_value = optional(any, {})
-
-    # for API permissions
-    statement_id = optional(string)
   }))
 
   default = {
     detector = {
       # code info for fucntion
       path        = "0.function_code/0.combined_functions"
-      source      = "detection_v2_5.py"
-      file_name   = "detection_v2_5"
-      output      = "detection_v2_5.zip"
+      source      = "detection_v3"
+      file_name   = "detection_v3"
+      output      = "detection_v3.zip"
       output_path = "0.function_code/0.combined_functions/zip_files"
 
       # function config
-      description   = "Python lambda function for Token detection (and adjustment) on DynamoDB table."
+      description   = "Python lambda function for Token detection (and adjustment) on DynamoDB table, plus prompt in .txt file."
       filename      = null
-      function_name = "token_detection_function"
+      function_name = "token-detection-function-1"
       handler       = "lambda_handler"
       architecture  = "x86_64"
       runtime       = "python3.14"
+      timeout       = 60
 
       # environmental variables
       env_value = {
-        # api gateway resourse path
-        # place values in lists becuase the function to create the lambda environmental vairbales
-        # uses jsonencode to allow for proper passing of values to AWS
         EXPIRATION_MINUTES = "10"
       }
+    }
+  }
+}
 
-      # for API permissions
-      statement_id = "AllowAPIGatewayInvokePython"
+# varibale for waf bedrock analyzer lambda
+variable "waf_analyzer_function_config" {
+  description = "Lmabda function config settings."
+  type = map(object({
+    path        = string
+    source      = string
+    file_name   = string
+    output      = string
+    output_path = string
+
+    # function config
+    description   = optional(string)
+    filename      = string
+    function_name = string
+    handler       = string
+    architecture  = optional(string)
+    runtime       = optional(string)
+    timeout       = optional(any)
+
+    # environment variables
+    env_value = optional(any, {})
+
+  }))
+
+  default = {
+    waf-bedrock-analyzer = {
+      # code info for fucntion
+      path        = "0.function_code/0.combined_functions"
+      source      = "waf_bedrock_analyzer"
+      file_name   = "waf_bedrock_analyzer_v2"
+      output      = "waf_bedrock_analyzer.zip"
+      output_path = "0.function_code/0.combined_functions/zip_files"
+
+      # function config
+      description   = "Python lambda function for waf log analysis with bedrock on DynamoDB table, plus prompt in .txt file."
+      filename      = null
+      function_name = "waf-bedrock-analyzer-function-1"
+      handler       = "lambda_handler"
+      architecture  = "x86_64"
+      runtime       = "python3.14"
+      timeout       = 60
+
+      # environmental variables
+      env_value = {
+        EXPIRATION_MINUTES = "10"
+      }
     }
   }
 }

@@ -4,7 +4,7 @@
         {
             "Effect": "Allow",
             "Action": ["bedrock:InvokeModel"],
-            "Resource": "${bedrock_arn}"
+            "Resource": "arn:aws:bedrock:*:*"
         }
     ]
 }
